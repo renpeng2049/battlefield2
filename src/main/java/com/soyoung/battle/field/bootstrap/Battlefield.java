@@ -10,6 +10,8 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
 import joptsimple.util.PathConverter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -17,6 +19,7 @@ import java.util.Arrays;
 
 class Battlefield extends EnvironmentAwareCommand {
 
+    final Logger logger = LogManager.getLogger(Battlefield.class);
 
     private final OptionSpecBuilder versionOption;
     private final OptionSpecBuilder daemonizeOption;
@@ -84,6 +87,7 @@ class Battlefield extends EnvironmentAwareCommand {
 
 
     void init() throws Exception {
+        logger.info("init >>>>");
         try {
             Bootstrap.init();
         } catch (Exception e) {

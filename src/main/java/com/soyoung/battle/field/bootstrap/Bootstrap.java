@@ -2,6 +2,8 @@ package com.soyoung.battle.field.bootstrap;
 
 import com.soyoung.battle.field.ThreadFactoryImpl;
 import com.soyoung.battle.field.Version;
+import com.soyoung.battle.field.http.netty4.Netty4HttpServerTransport;
+import com.soyoung.battle.field.rest.RestController;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -47,8 +49,14 @@ public class Bootstrap {
      * This method is invoked by {@link Battlefield#main(String[])} to startup battlefield.
      */
     static void init() throws Exception {
-
         INSTANCE = new Bootstrap();
+
+        //TODO 启动netty端口
+        final RestController restController = new RestController();
+
+        Netty4HttpServerTransport httpServerTransport = new Netty4HttpServerTransport(restController);
+        httpServerTransport.start();
+
         INSTANCE.start();
     }
 
