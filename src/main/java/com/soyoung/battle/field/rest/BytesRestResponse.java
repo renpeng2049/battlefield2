@@ -26,8 +26,6 @@ public class BytesRestResponse extends RestResponse {
     }
 
 
-
-
     @Override
     public String contentType() {
         return contentType;
