@@ -119,7 +119,6 @@ public class Bootstrap {
 
 
     private void start() throws Exception {
-        System.out.println(">>>>start");
         keepAliveThread.start();
     }
 

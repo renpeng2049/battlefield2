@@ -27,7 +27,6 @@ public class Netty4HttpRequestHandler extends SimpleChannelInboundHandler<Object
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         Logger logger = Loggers.getLogger(Netty4HttpRequestHandler.class);
 
-        logger.info("channelRead0 gogogo");
         final FullHttpRequest request;
         final HttpPipelinedRequest pipelinedRequest;
         if (this.httpPipeliningEnabled && msg instanceof HttpPipelinedRequest) {

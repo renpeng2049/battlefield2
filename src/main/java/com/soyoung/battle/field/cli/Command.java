@@ -84,7 +84,6 @@ public abstract class Command implements Closeable {
             terminal.println(Terminal.Verbosity.SILENT, "ERROR: " + e.getMessage());
             return e.exitCode;
         }
-        terminal.println(">>>>>>>>2");
         return ExitCodes.OK;
 
     }
