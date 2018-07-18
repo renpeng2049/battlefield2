@@ -1,5 +1,7 @@
 package com.soyoung.battle.field;
 
+import com.soyoung.battle.field.rest.RestStatus;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,19 @@ public class BattlefieldException extends RuntimeException {
         return headers.get(key);
     }
 
+
+    public BattlefieldException(){
+
+    }
+
+
+    /**
+     * Construct a <code>ElasticsearchException</code> with the specified cause exception.
+     */
+    public BattlefieldException(Throwable cause) {
+        super(cause);
+    }
+
     /**
      * Construct a <code>ElasticsearchException</code> with the specified detail message.
      *
@@ -36,5 +51,29 @@ public class BattlefieldException extends RuntimeException {
      */
     public BattlefieldException(String msg, Object... args) {
         super("todo expection message");
+    }
+
+
+    /**
+     * Returns the rest status code associated with this exception.
+     */
+    public RestStatus status() {
+        Throwable cause = unwrapCause();
+        if (cause == this) {
+            return RestStatus.INTERNAL_SERVER_ERROR;
+        } else {
+            return ExceptionsHelper.status(cause);
+        }
+    }
+
+
+    /**
+     * Unwraps the actual cause from the exception for cases when the exception is a
+     * {@link }.
+     *
+     * @see ExceptionsHelper#unwrapCause(Throwable)
+     */
+    public Throwable unwrapCause() {
+        return ExceptionsHelper.unwrapCause(this);
     }
 }

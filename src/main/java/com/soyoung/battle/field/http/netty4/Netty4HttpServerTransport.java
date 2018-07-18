@@ -8,6 +8,7 @@ import com.soyoung.battle.field.common.network.NetworkAddress;
 import com.soyoung.battle.field.common.unit.ByteSizeUnit;
 import com.soyoung.battle.field.common.unit.ByteSizeValue;
 import com.soyoung.battle.field.common.unit.TimeValue;
+import com.soyoung.battle.field.common.util.concurrent.ThreadContext;
 import com.soyoung.battle.field.http.BindHttpException;
 import com.soyoung.battle.field.http.HttpServerTransport;
 import com.soyoung.battle.field.http.netty4.cors.Netty4CorsConfig;
@@ -16,6 +17,7 @@ import com.soyoung.battle.field.http.netty4.cors.Netty4CorsHandler;
 import com.soyoung.battle.field.rest.RestChannel;
 import com.soyoung.battle.field.rest.RestRequest;
 import com.soyoung.battle.field.rest.RestUtils;
+import com.soyoung.battle.field.threadpool.ThreadPool;
 import com.soyoung.battle.field.transport.BoundTransportAddress;
 import com.soyoung.battle.field.transport.TransportAddress;
 import com.soyoung.battle.field.transport.netty4.Netty4OpenChannelsHandler;
@@ -161,6 +163,7 @@ public class Netty4HttpServerTransport {
 //        }
 
         dispatcher.dispatchRequest(request, channel);
+
     }
 
     void dispatchBadRequest(final RestRequest request, final RestChannel channel, final Throwable cause) {
@@ -172,6 +175,7 @@ public class Netty4HttpServerTransport {
     }
 
     public void start(){
+        logger.info("netty 4 http server transport start");
 
         this.serverOpenChannels = new Netty4OpenChannelsHandler(logger);
 

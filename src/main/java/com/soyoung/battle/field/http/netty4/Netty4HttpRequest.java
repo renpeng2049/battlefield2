@@ -15,6 +15,7 @@ public class Netty4HttpRequest extends RestRequest {
 
     private final FullHttpRequest request;
     private final Channel channel;
+    private final byte[] content;
 
     Netty4HttpRequest(FullHttpRequest request, Channel channel){
         super(request.uri(), new HttpHeadersMap(request.headers()));
@@ -22,6 +23,7 @@ public class Netty4HttpRequest extends RestRequest {
         this.channel = channel;
 
         ByteBuf bb = request.content();
+        content = bb.array();
     }
 
     public FullHttpRequest request() {
@@ -59,6 +61,18 @@ public class Netty4HttpRequest extends RestRequest {
     public String uri() {
         return request.uri();
     }
+
+
+    @Override
+    public boolean hasContent() {
+        return content.length > 0;
+    }
+
+    @Override
+    public byte[] content() {
+        return content;
+    }
+
 
     /**
      * Returns the remote address where this rest request channel is "connected to".  The

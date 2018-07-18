@@ -1,12 +1,13 @@
 package com.soyoung.battle.field.rest;
 
+import com.soyoung.battle.field.common.Booleans;
 import com.soyoung.battle.field.common.Nullable;
+import io.netty.buffer.ByteBuf;
 
 import java.net.SocketAddress;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class RestRequest {
 
@@ -14,6 +15,7 @@ public abstract class RestRequest {
     private final Map<String, String> params;
     private final Map<String, List<String>> headers;
     private final String rawPath;
+    private final Set<String> consumedParams = new HashSet<>();
 
     public RestRequest(String uri, Map<String, List<String>> headers){
 
@@ -50,6 +52,22 @@ public abstract class RestRequest {
     }
 
 
+    /**
+     * The path part of the URI (without the query string), decoded.
+     */
+    public final String path() {
+        return RestUtils.decodeComponent(rawPath());
+    }
+
+    public Map<String, String> params() {
+        return params;
+    }
+
+    public abstract boolean hasContent();
+
+    public abstract byte[] content();
+
+
     @Nullable
     public SocketAddress getRemoteAddress() {
         return null;
@@ -70,4 +88,58 @@ public abstract class RestRequest {
         }
         return null;
     }
+
+    public boolean paramAsBoolean(String key, boolean defaultValue) {
+        String rawParam = param(key);
+        // Treat empty string as true because that allows the presence of the url parameter to mean "turn this on"
+        if (rawParam != null && rawParam.length() == 0) {
+            return true;
+        } else {
+            return Booleans.parseBoolean(rawParam, defaultValue);
+        }
+    }
+
+    public final String param(String key) {
+        consumedParams.add(key);
+        return params.get(key);
+    }
+
+
+    /**
+     * Returns a list of parameters that have been consumed. This method returns a copy, callers
+     * are free to modify the returned list.
+     *
+     * @return the list of currently consumed parameters.
+     */
+    List<String> consumedParams() {
+        return consumedParams.stream().collect(Collectors.toList());
+    }
+
+    /**
+     * Returns a list of parameters that have not yet been consumed. This method returns a copy,
+     * callers are free to modify the returned list.
+     *
+     * @return the list of currently unconsumed parameters.
+     */
+    List<String> unconsumedParams() {
+        return params
+                .keySet()
+                .stream()
+                .filter(p -> !consumedParams.contains(p))
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Get the value of the header or {@code null} if not found. This method only retrieves the first header value if multiple values are
+     * sent. Use of {@link #getAllHeaderValues(String)} should be preferred
+     */
+    public final String header(String name) {
+        List<String> values = headers.get(name);
+        if (values != null && values.isEmpty() == false) {
+            return values.get(0);
+        }
+        return null;
+    }
+
 }

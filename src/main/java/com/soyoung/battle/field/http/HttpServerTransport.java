@@ -1,5 +1,6 @@
 package com.soyoung.battle.field.http;
 
+import com.soyoung.battle.field.common.util.concurrent.ThreadContext;
 import com.soyoung.battle.field.rest.RestChannel;
 import com.soyoung.battle.field.rest.RestRequest;
 import com.soyoung.battle.field.transport.BoundTransportAddress;

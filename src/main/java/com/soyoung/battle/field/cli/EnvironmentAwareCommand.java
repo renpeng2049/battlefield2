@@ -1,9 +1,13 @@
 package com.soyoung.battle.field.cli;
 
+import com.soyoung.battle.field.common.setting.Settings;
+import com.soyoung.battle.field.env.Environment;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.util.KeyValuePair;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -43,14 +47,22 @@ public abstract class EnvironmentAwareCommand extends Command {
             settings.put(kvp.key, kvp.value);
         }
 
-        putSystemPropertyIfSettingIsMissing(settings, "path.data", "es.path.data");
-        putSystemPropertyIfSettingIsMissing(settings, "path.home", "es.path.home");
-        putSystemPropertyIfSettingIsMissing(settings, "path.logs", "es.path.logs");
+        putSystemPropertyIfSettingIsMissing(settings, "path.data", "bf.path.data");
+        putSystemPropertyIfSettingIsMissing(settings, "path.home", "bf.path.home");
+        putSystemPropertyIfSettingIsMissing(settings, "path.logs", "bf.path.logs");
 
-        execute(terminal, options, "");
+        execute(terminal, options, createEnv(settings));
     }
 
+    /** Create an {@link Environment} for the command to use. Overrideable for tests. */
+    protected Environment createEnv(final Map<String, String> settings) throws UserException {
+        final String bfPathConf = System.getProperty("bf.path.conf");
+        if (bfPathConf == null) {
+            throw new UserException(ExitCodes.CONFIG, "the system property [bf.path.conf] must be set");
+        }
 
+        return InternalSettingsPreparer.prepareEnvironment(Settings.EMPTY, settings, getConfigPath(bfPathConf));
+    }
 
     /** Ensure the given setting exists, reading it from system properties if not already set. */
     private static void putSystemPropertyIfSettingIsMissing(final Map<String, String> settings, final String setting, final String key) {
@@ -71,8 +83,12 @@ public abstract class EnvironmentAwareCommand extends Command {
         }
     }
 
+    @SuppressForbidden(reason = "need path to construct environment")
+    private static Path getConfigPath(final String pathConf) {
+        return Paths.get(pathConf);
+    }
 
     /** Execute the command with the initialized {@link }. */
-    protected abstract void execute(Terminal terminal, OptionSet options, String env) throws Exception;
+    protected abstract void execute(Terminal terminal, OptionSet options, Environment env) throws Exception;
 
 }

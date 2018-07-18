@@ -5,6 +5,7 @@ import com.soyoung.battle.field.cli.EnvironmentAwareCommand;
 import com.soyoung.battle.field.cli.ExitCodes;
 import com.soyoung.battle.field.cli.Terminal;
 import com.soyoung.battle.field.cli.UserException;
+import com.soyoung.battle.field.env.Environment;
 import com.soyoung.battle.field.monitor.jvm.JvmInfo;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -63,7 +64,7 @@ class Battlefield extends EnvironmentAwareCommand {
     }
 
     @Override
-    protected void execute(Terminal terminal, OptionSet options, String env) throws UserException {
+    protected void execute(Terminal terminal, OptionSet options, Environment env) throws UserException {
         if (options.nonOptionArguments().isEmpty() == false) {
             throw new UserException(ExitCodes.USAGE, "Positional arguments not allowed, found " + options.nonOptionArguments());
         }
@@ -79,17 +80,17 @@ class Battlefield extends EnvironmentAwareCommand {
         final boolean quiet = options.has(quietOption);
 
         try {
-            init();
+            init(env);
         } catch (Exception e) {
             throw new UserException(ExitCodes.CONFIG, e.getMessage());
         }
     }
 
 
-    void init() throws Exception {
+    void init(Environment env) throws Exception {
         logger.info("init >>>>");
         try {
-            Bootstrap.init();
+            Bootstrap.init(env);
         } catch (Exception e) {
             // format exceptions to the console in a special way
             // to avoid 2MB stacktraces from guice, etc.
