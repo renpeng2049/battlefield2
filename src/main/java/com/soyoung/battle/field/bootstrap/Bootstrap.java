@@ -66,7 +66,7 @@ public class Bootstrap {
         final UsageService usageService = new UsageService(environment.settings());
         CircuitBreakerService circuitBreakerService = new NoneCircuitBreakerService();
 
-        UnaryOperator<RestHandler> restWrapper = r -> r;
+        UnaryOperator<RestHandler> restWrapper = null;
 
         final RestController restController = new RestController(restWrapper,circuitBreakerService,usageService);
         INSTANCE.initRestHandlers(environment.settings(),restController);

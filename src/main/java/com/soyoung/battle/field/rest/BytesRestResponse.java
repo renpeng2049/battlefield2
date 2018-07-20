@@ -46,6 +46,8 @@ public class BytesRestResponse extends RestResponse {
 
     public BytesRestResponse(RestChannel channel, RestStatus status, Exception e) throws IOException {
 
+        Logger logger = Loggers.getLogger(BytesRestResponse.class);
+        logger.error(">>>>>>>",e);
         channel.request(); //TODO 获取请求内容
         this.status = status;
 
