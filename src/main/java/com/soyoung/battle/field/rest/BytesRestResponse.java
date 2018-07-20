@@ -2,13 +2,14 @@ package com.soyoung.battle.field.rest;
 
 import com.soyoung.battle.field.BattlefieldException;
 import com.soyoung.battle.field.ExceptionsHelper;
+import com.soyoung.battle.field.common.logging.Loggers;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
 public class BytesRestResponse extends RestResponse {
-
 
     public static final String TEXT_CONTENT_TYPE = "text/plain; charset=UTF-8";
 
@@ -44,11 +45,12 @@ public class BytesRestResponse extends RestResponse {
     }
 
     public BytesRestResponse(RestChannel channel, RestStatus status, Exception e) throws IOException {
+
         channel.request(); //TODO 获取请求内容
         this.status = status;
 
         ByteBuf tmp = Unpooled.buffer();
-        tmp.writeBytes(e.getMessage().getBytes());
+        tmp.writeBytes(e.toString().getBytes());
         this.content = tmp;
         this.contentType = "";
 

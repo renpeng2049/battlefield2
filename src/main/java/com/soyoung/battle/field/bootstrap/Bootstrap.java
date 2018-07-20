@@ -2,26 +2,22 @@ package com.soyoung.battle.field.bootstrap;
 
 import com.soyoung.battle.field.ThreadFactoryImpl;
 import com.soyoung.battle.field.Version;
-import com.soyoung.battle.field.common.breaker.*;
-import com.soyoung.battle.field.common.logging.Loggers;
-import com.soyoung.battle.field.common.util.set.Sets;
+import com.soyoung.battle.field.common.breaker.CircuitBreakerService;
+import com.soyoung.battle.field.common.breaker.NoneCircuitBreakerService;
+import com.soyoung.battle.field.common.setting.Settings;
 import com.soyoung.battle.field.env.Environment;
 import com.soyoung.battle.field.http.netty4.Netty4HttpServerTransport;
 import com.soyoung.battle.field.rest.RestController;
 import com.soyoung.battle.field.rest.RestHandler;
-import com.soyoung.battle.field.store.ArrayStore;
+import com.soyoung.battle.field.rest.action.BlankAction;
 import com.soyoung.battle.field.usage.UsageService;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Bootstrap {
 
@@ -68,31 +64,12 @@ public class Bootstrap {
 //        arrayStore.load();
 
         final UsageService usageService = new UsageService(environment.settings());
-        CircuitBreakerService circuitBreakerService = new CircuitBreakerService(environment.settings()) {
-            @Override
-            public void registerBreaker(BreakerSettings breakerSettings) {
+        CircuitBreakerService circuitBreakerService = new NoneCircuitBreakerService();
 
-            }
-
-            @Override
-            public CircuitBreaker getBreaker(String name) {
-                return null;
-            }
-
-            @Override
-            public AllCircuitBreakerStats stats() {
-                return null;
-            }
-
-            @Override
-            public CircuitBreakerStats stats(String name) {
-                return null;
-            }
-        };
-
-        UnaryOperator<RestHandler> restWrapper = null;
+        UnaryOperator<RestHandler> restWrapper = r -> r;
 
         final RestController restController = new RestController(restWrapper,circuitBreakerService,usageService);
+        INSTANCE.initRestHandlers(environment.settings(),restController);
 
         // 启动netty端口
         Netty4HttpServerTransport httpServerTransport = new Netty4HttpServerTransport(restController);
@@ -123,6 +100,13 @@ public class Bootstrap {
     }
 
     static void stop() throws IOException {
+
+    }
+
+
+
+    void initRestHandlers(Settings settings, RestController restController){
+        new BlankAction(settings,restController);
 
     }
 }

@@ -59,6 +59,8 @@ public class RestController  implements HttpServerTransport.Dispatcher{
             tryAllHandlers(request, channel);
         } catch (Exception e) {
             try {
+                e.printStackTrace();
+                logger.info("handle request Exception e:{}",e);
                 channel.sendResponse(new BytesRestResponse(channel, e));
             } catch (Exception inner) {
                 inner.addSuppressed(e);
