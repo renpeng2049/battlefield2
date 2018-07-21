@@ -1,8 +1,10 @@
 package com.soyoung.battle.field.common.util;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 
 public class IOUtils {
 
@@ -127,4 +129,18 @@ public class IOUtils {
     }
 
 
+    /**
+     * Deletes all given files, suppressing all thrown IOExceptions.
+     * <p>
+     * Note that the files should not be null.
+     */
+    public static void deleteFilesIgnoringExceptions(File dir, Collection<String> files) {
+//        for(String name : files) {
+//            try {
+//                dir.deleteFile(name);
+//            } catch (Throwable ignored) {
+//                // ignore
+//            }
+//        }
+    }
 }

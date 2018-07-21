@@ -30,6 +30,9 @@ public class Environment {
 
     private final Path dataFile;
 
+    /** Path to the temporary file directory used by the JDK */
+    private final Path tmpFile = PathUtils.get(System.getProperty("java.io.tmpdir"));
+
 
     public Environment(Settings settings, Path configPath){
 
@@ -80,6 +83,11 @@ public class Environment {
         return dataFile;
     }
 
+
+    /** Path to the default temp directory used by the JDK */
+    public Path tmpFile() {
+        return tmpFile;
+    }
 
     /**
      * The settings used to build this environment.

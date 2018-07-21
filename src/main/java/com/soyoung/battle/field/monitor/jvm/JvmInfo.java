@@ -74,6 +74,13 @@ public class JvmInfo {
         return this.mem;
     }
 
+    /**
+     * The process id.
+     */
+    public long pid() {
+        return this.pid;
+    }
+
     public static class Mem  {
 
         private final long heapInit;

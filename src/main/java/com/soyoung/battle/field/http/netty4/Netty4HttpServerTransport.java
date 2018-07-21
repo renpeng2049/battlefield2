@@ -4,20 +4,22 @@ import com.soyoung.battle.field.ThreadFactoryImpl;
 import com.soyoung.battle.field.common.Constants;
 import com.soyoung.battle.field.common.PortsRange;
 import com.soyoung.battle.field.common.Strings;
+import com.soyoung.battle.field.common.component.*;
 import com.soyoung.battle.field.common.network.NetworkAddress;
+import com.soyoung.battle.field.common.setting.Settings;
 import com.soyoung.battle.field.common.unit.ByteSizeUnit;
 import com.soyoung.battle.field.common.unit.ByteSizeValue;
 import com.soyoung.battle.field.common.unit.TimeValue;
-import com.soyoung.battle.field.common.util.concurrent.ThreadContext;
 import com.soyoung.battle.field.http.BindHttpException;
+import com.soyoung.battle.field.http.HttpInfo;
 import com.soyoung.battle.field.http.HttpServerTransport;
+import com.soyoung.battle.field.http.HttpStats;
 import com.soyoung.battle.field.http.netty4.cors.Netty4CorsConfig;
 import com.soyoung.battle.field.http.netty4.cors.Netty4CorsConfigBuilder;
 import com.soyoung.battle.field.http.netty4.cors.Netty4CorsHandler;
 import com.soyoung.battle.field.rest.RestChannel;
 import com.soyoung.battle.field.rest.RestRequest;
 import com.soyoung.battle.field.rest.RestUtils;
-import com.soyoung.battle.field.threadpool.ThreadPool;
 import com.soyoung.battle.field.transport.BoundTransportAddress;
 import com.soyoung.battle.field.transport.TransportAddress;
 import com.soyoung.battle.field.transport.netty4.Netty4OpenChannelsHandler;
@@ -37,7 +39,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +47,7 @@ import java.util.regex.Pattern;
 
 import static com.soyoung.battle.field.http.HttpServerTransport.HTTP_SERVER_WORKER_THREAD_NAME_PREFIX;
 
-public class Netty4HttpServerTransport {
+public class Netty4HttpServerTransport extends AbstractLifecycleComponent implements HttpServerTransport {
 
     final Logger logger = LogManager.getLogger(Netty4HttpServerTransport.class);
 
@@ -85,8 +86,9 @@ public class Netty4HttpServerTransport {
     Netty4OpenChannelsHandler serverOpenChannels;
 
 
-    public Netty4HttpServerTransport(HttpServerTransport.Dispatcher dispatcher){
+    public Netty4HttpServerTransport(Settings settings, HttpServerTransport.Dispatcher dispatcher){
 
+        super(settings);
         this.pipelining = true; //TODO
         this.detailedErrorsEnabled = true;
         corsConfig = buildCorsConfig();
@@ -174,7 +176,8 @@ public class Netty4HttpServerTransport {
         dispatcher.dispatchBadRequest(request, channel, cause);
     }
 
-    public void start(){
+    @Override
+    protected void doStart(){
         logger.info("netty 4 http server transport start");
 
         this.serverOpenChannels = new Netty4OpenChannelsHandler(logger);
@@ -325,6 +328,53 @@ public class Netty4HttpServerTransport {
 
     }
 
+    @Override
+    protected void doStop() {
+        synchronized (serverChannels) {
+            if (!serverChannels.isEmpty()) {
+                try {
+                    Netty4Utils.closeChannels(serverChannels);
+                } catch (IOException e) {
+                    logger.trace("exception while closing channels", e);
+                }
+                serverChannels.clear();
+            }
+        }
 
+        if (serverOpenChannels != null) {
+            serverOpenChannels.close();
+            serverOpenChannels = null;
+        }
 
+        if (serverBootstrap != null) {
+            serverBootstrap.config().group().shutdownGracefully(0, 5, TimeUnit.SECONDS).awaitUninterruptibly();
+            serverBootstrap = null;
+        }
+    }
+
+    @Override
+    protected void doClose() throws IOException {
+
+    }
+
+    @Override
+    public BoundTransportAddress boundAddress() {
+        return this.boundAddress;
+    }
+
+    @Override
+    public HttpInfo info() {
+        BoundTransportAddress boundTransportAddress = boundAddress();
+        if (boundTransportAddress == null) {
+            return null;
+        }
+        return new HttpInfo(boundTransportAddress, maxContentLength.getBytes());
+    }
+
+    @Override
+    public HttpStats stats() {
+        Netty4OpenChannelsHandler channels = serverOpenChannels;
+        return new HttpStats(channels == null ? 0 : channels.numberOfOpenChannels(), channels == null ? 0 : channels.totalChannels());
+
+    }
 }
