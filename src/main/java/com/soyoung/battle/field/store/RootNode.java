@@ -23,7 +23,7 @@ public class RootNode {
     //加载根节点数据
     public void load(){
 
-        Path path = environment.getDataFile().resolve(ROO_NODE_FILE);
+        Path path = environment.dataFile().resolve(ROO_NODE_FILE);
 
         File root = path.toFile();
 

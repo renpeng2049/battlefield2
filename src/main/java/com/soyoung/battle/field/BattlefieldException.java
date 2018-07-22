@@ -1,5 +1,6 @@
 package com.soyoung.battle.field;
 
+import com.soyoung.battle.field.common.logging.LoggerMessageFormat;
 import com.soyoung.battle.field.rest.RestStatus;
 
 import java.util.HashMap;
@@ -38,6 +39,21 @@ public class BattlefieldException extends RuntimeException {
      */
     public BattlefieldException(Throwable cause) {
         super(cause);
+    }
+
+    /**
+     * Construct a <code>ElasticsearchException</code> with the specified detail message
+     * and nested exception.
+     *
+     * The message can be parameterized using <code>{}</code> as placeholders for the given
+     * arguments
+     *
+     * @param msg   the detail message
+     * @param cause the nested exception
+     * @param args  the arguments for the message
+     */
+    public BattlefieldException(String msg, Throwable cause, Object... args) {
+        super(LoggerMessageFormat.format(msg, args), cause);
     }
 
     /**

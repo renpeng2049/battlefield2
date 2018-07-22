@@ -31,4 +31,9 @@ public class Version implements Comparable<Version> {
     public static Version fromId(int id) {
         return new Version(1001001);
     }
+
+
+    public boolean isRelease() {
+        return build == 99;
+    }
 }

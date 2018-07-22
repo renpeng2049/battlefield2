@@ -79,7 +79,7 @@ public class Environment {
         return logsFile;
     }
 
-    public Path getDataFile() {
+    public Path dataFile() {
         return dataFile;
     }
 

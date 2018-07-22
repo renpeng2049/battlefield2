@@ -25,7 +25,7 @@ public class ArrayStore {
     }
 
     public void load(){
-        Path path = environment.getDataFile().resolve(ARRAY_DB_NAME);
+        Path path = environment.dataFile().resolve(ARRAY_DB_NAME);
 
         File adb = path.toFile();
 
