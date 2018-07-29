@@ -24,6 +24,7 @@ public class Netty4HttpRequestHandler extends SimpleChannelInboundHandler<Object
         this.detailedErrorsEnabled = detailedErrorsEnabled;
     }
 
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
         Logger logger = Loggers.getLogger(Netty4HttpRequestHandler.class);
 

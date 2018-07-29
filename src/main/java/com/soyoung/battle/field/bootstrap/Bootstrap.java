@@ -101,8 +101,17 @@ public class Bootstrap {
     static void stop() throws IOException {
         try {
             //TODO 关闭资源
+            INSTANCE.stop2();
         } finally {
             INSTANCE.keepAliveLatch.countDown();
+        }
+    }
+
+    private void stop2(){
+        try {
+            node.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

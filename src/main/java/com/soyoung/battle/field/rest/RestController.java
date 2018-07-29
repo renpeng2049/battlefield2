@@ -48,6 +48,7 @@ public class RestController  implements HttpServerTransport.Dispatcher{
 
         logger.info("请求到达 >>>>>> path:{}",request.rawPath());
         logger.info("请求到达 >>>>>> param:{}",request.params());
+        logger.info("请求到达 >>>>>> content:{}",new String(request.content()));
 
         if (request.rawPath().equals("/config/favicon.ico")) {
             logger.info("获取icon ");
@@ -285,17 +286,7 @@ public class RestController  implements HttpServerTransport.Dispatcher{
             BytesRestResponse restResponse = new BytesRestResponse(RestStatus.OK, "text/plain", helloWorld.getBytes());
             channel.sendResponse(restResponse);
 
-//            Integer id = 1;
-//            String name = "renpeng";
-//            String email = "493252378@qq.com";
-//
-//            SampleSchema ss = new SampleSchema();
-//
-//            ByteBuffer bb = ByteBuffer.allocate(ss.getRowSize());
-//            bb.putInt(id);
-//            bb.put(name.getBytes());
-//            byte[] emailByte = email.getBytes();
-//            bb.put(emailByte,36,emailByte.length);
+
 
 
 

@@ -67,16 +67,16 @@ public abstract class BaseRestHandler extends AbstractComponent implements RestH
 
         // validate unconsumed params, but we must exclude params used to format the response
         // use a sorted set so the unconsumed parameters appear in a reliable sorted order
-        final SortedSet<String> unconsumedParams =
-            request.unconsumedParams().stream().filter(p -> !responseParams().contains(p)).collect(Collectors.toCollection(TreeSet::new));
+//        final SortedSet<String> unconsumedParams =
+//            request.unconsumedParams().stream().filter(p -> !responseParams().contains(p)).collect(Collectors.toCollection(TreeSet::new));
 
         // validate the non-response params
-        if (!unconsumedParams.isEmpty()) {
-            final Set<String> candidateParams = new HashSet<>();
-            candidateParams.addAll(request.consumedParams());
-            candidateParams.addAll(responseParams());
-            throw new IllegalArgumentException(unrecognized(request, unconsumedParams, candidateParams, "parameter"));
-        }
+//        if (!unconsumedParams.isEmpty()) {
+//            final Set<String> candidateParams = new HashSet<>();
+//            candidateParams.addAll(request.consumedParams());
+//            candidateParams.addAll(responseParams());
+//            throw new IllegalArgumentException(unrecognized(request, unconsumedParams, candidateParams, "parameter"));
+//        }
 
         usageCount.increment();
         // execute the action

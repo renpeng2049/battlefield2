@@ -2,12 +2,16 @@ package com.soyoung.battle.field.rest;
 
 import com.soyoung.battle.field.common.Booleans;
 import com.soyoung.battle.field.common.Nullable;
-import io.netty.buffer.ByteBuf;
+import com.soyoung.battle.field.common.Strings;
+import com.soyoung.battle.field.common.unit.ByteSizeValue;
+import com.soyoung.battle.field.common.unit.TimeValue;
 
 import java.net.SocketAddress;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.soyoung.battle.field.common.unit.ByteSizeValue.parseBytesSizeValue;
+import static com.soyoung.battle.field.common.unit.TimeValue.parseTimeValue;
 
 public abstract class RestRequest {
 
@@ -89,15 +93,6 @@ public abstract class RestRequest {
         return null;
     }
 
-    public boolean paramAsBoolean(String key, boolean defaultValue) {
-        String rawParam = param(key);
-        // Treat empty string as true because that allows the presence of the url parameter to mean "turn this on"
-        if (rawParam != null && rawParam.length() == 0) {
-            return true;
-        } else {
-            return Booleans.parseBoolean(rawParam, defaultValue);
-        }
-    }
 
     public final String param(String key) {
         consumedParams.add(key);
@@ -141,5 +136,81 @@ public abstract class RestRequest {
         }
         return null;
     }
+
+
+    public float paramAsFloat(String key, float defaultValue) {
+        String sValue = param(key);
+        if (sValue == null) {
+            return defaultValue;
+        }
+        try {
+            return Float.parseFloat(sValue);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Failed to parse float parameter [" + key + "] with value [" + sValue + "]", e);
+        }
+    }
+
+    public int paramAsInt(String key, int defaultValue) {
+        String sValue = param(key);
+        if (sValue == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(sValue);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Failed to parse int parameter [" + key + "] with value [" + sValue + "]", e);
+        }
+    }
+
+    public long paramAsLong(String key, long defaultValue) {
+        String sValue = param(key);
+        if (sValue == null) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(sValue);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Failed to parse long parameter [" + key + "] with value [" + sValue + "]", e);
+        }
+    }
+
+    public boolean paramAsBoolean(String key, boolean defaultValue) {
+        String rawParam = param(key);
+        // Treat empty string as true because that allows the presence of the url parameter to mean "turn this on"
+        if (rawParam != null && rawParam.length() == 0) {
+            return true;
+        } else {
+            return Booleans.parseBoolean(rawParam, defaultValue);
+        }
+    }
+
+    public Boolean paramAsBoolean(String key, Boolean defaultValue) {
+        return Booleans.parseBoolean(param(key), defaultValue);
+    }
+
+    public TimeValue paramAsTime(String key, TimeValue defaultValue) {
+        return parseTimeValue(param(key), defaultValue, key);
+    }
+
+    public ByteSizeValue paramAsSize(String key, ByteSizeValue defaultValue) {
+        return parseBytesSizeValue(param(key), defaultValue, key);
+    }
+
+    public String[] paramAsStringArray(String key, String[] defaultValue) {
+        String value = param(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        return Strings.splitStringByCommaToArray(value);
+    }
+
+    public String[] paramAsStringArrayOrEmptyIfAll(String key) {
+        String[] params = paramAsStringArray(key, Strings.EMPTY_ARRAY);
+        if (Strings.isAllOrWildcard(params)) {
+            return Strings.EMPTY_ARRAY;
+        }
+        return params;
+    }
+
 
 }

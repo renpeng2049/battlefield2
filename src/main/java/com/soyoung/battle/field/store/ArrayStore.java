@@ -1,6 +1,8 @@
 package com.soyoung.battle.field.store;
 
+import com.soyoung.battle.field.common.logging.Loggers;
 import com.soyoung.battle.field.env.Environment;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,15 +11,18 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * 追加式存储
  */
 public class ArrayStore {
 
+    Logger logger = Loggers.getLogger(ArrayStore.class);
     private static final String ARRAY_DB_NAME = ".adb";
     private Environment environment;
-    private FileChannel fileChannel;
+    private FileChannel writeFileChannel;
+    private FileChannel readFileChannel;
 
     public ArrayStore(Environment env){
 
@@ -28,21 +33,27 @@ public class ArrayStore {
         Path path = environment.dataFile().resolve(ARRAY_DB_NAME);
 
         File adb = path.toFile();
-
+        logger.info("adb store location :{}",adb.getPath());
         if(adb.exists()){
 
-            fileChannel = getFileChannel(adb);
+            writeFileChannel = getFileChannel(adb);
+            readFileChannel = getFileChannel(adb);
         } else {
             //文件不存在，创建文件
             try {
                 adb.createNewFile();
-                fileChannel = getFileChannel(adb);
+                writeFileChannel = getFileChannel(adb);
+                readFileChannel = getFileChannel(adb);
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
+        logger.info(">>>>>>readChannel :{}",readFileChannel);
+        logger.info(">>>>>>writeFileChannel :{}",writeFileChannel);
+
+        logger.info("is write channel equal to read channel:{}",writeFileChannel == readFileChannel );
     }
 
     public FileChannel getFileChannel(File file){
@@ -69,12 +80,46 @@ public class ArrayStore {
 
         boolean flag = true;
         try {
-            fileChannel.write(byteBuffer);
+            byteBuffer.flip();
+            writeFileChannel.write(byteBuffer);
+            writeFileChannel.force(true);
         } catch (IOException e) {
             flag = false;
             e.printStackTrace();
         }
 
         return flag;
+    }
+
+    public boolean read(ByteBuffer byteBuffer){
+
+        boolean flag = false;
+        try {
+            int i = readFileChannel.read(byteBuffer);
+            if(i != -1){
+                flag = true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return flag;
+    }
+
+    public void stop(){
+
+        try {
+            writeFileChannel.close();
+        } catch (IOException e) {
+
+        } finally {
+            if(null != writeFileChannel){
+                try {
+                    writeFileChannel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
