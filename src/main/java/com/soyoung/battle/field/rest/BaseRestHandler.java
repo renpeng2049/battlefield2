@@ -19,6 +19,7 @@
 
 package com.soyoung.battle.field.rest;
 
+import com.alibaba.fastjson.JSONObject;
 import com.soyoung.battle.field.common.CheckedConsumer;
 import com.soyoung.battle.field.common.component.AbstractComponent;
 import com.soyoung.battle.field.common.setting.Setting;
@@ -134,4 +135,19 @@ public abstract class BaseRestHandler extends AbstractComponent implements RestH
         return Collections.emptySet();
     }
 
+    protected JSONObject getParam(RestRequest request) {
+        Map<String,String> param = request.params();
+        byte[] content = request.content();
+
+        JSONObject json = new JSONObject();
+
+        if(null != content && content.length>0){
+            json = JSONObject.parseObject(new String(content));
+        }
+
+        for(Map.Entry<String,String> entry : param.entrySet()){
+            json.put(entry.getKey(),entry.getValue());
+        }
+        return json;
+    }
 }

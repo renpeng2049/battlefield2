@@ -3,28 +3,24 @@ package com.soyoung.battle.field.rest.action;
 import com.alibaba.fastjson.JSONObject;
 import com.soyoung.battle.field.common.setting.Settings;
 import com.soyoung.battle.field.rest.*;
-import com.soyoung.battle.field.store.ArrayStore;
-import com.soyoung.battle.field.store.StoreSchemas;
-import com.soyoung.battle.field.store.TableStruct;
-import com.soyoung.battle.field.store.TableStructParser;
+import com.soyoung.battle.field.store.*;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Map;
 
 public class SqlAction extends BaseRestHandler {
 
 
-    private ArrayStore arrayStore;
     private StoreSchemas storeSchemas;
-    private TableStructParser parser;
+    private TableParser parser;
+    private TxManager txManager;
 
-    public SqlAction(Settings settings, RestController controller, ArrayStore arrayStore,StoreSchemas storeSchemas){
+    public SqlAction(Settings settings, RestController controller,StoreSchemas storeSchemas){
         super(settings);
         controller.registerHandler(RestRequest.Method.GET,"/sql",this);
-        this.arrayStore = arrayStore;
         this.storeSchemas = storeSchemas;
-        this.parser = new TableStructParser();
+        this.parser = new TableParser();
+        this.txManager = new TxManager(parser);
     }
 
     @Override
@@ -36,31 +32,19 @@ public class SqlAction extends BaseRestHandler {
     protected RestChannelConsumer prepareRequest(RestRequest request) throws IOException {
         return channel -> {
 
-            TableStruct tableStruct = storeSchemas.getTableStruct("sample");
-            Map<String,String> param = request.params();
-            byte[] content = request.content();
-
-            JSONObject json = new JSONObject();
-
-            if(null != content && content.length>0){
-                json = JSONObject.parseObject(new String(content));
-            }
-
-            for(Map.Entry<String,String> entry : param.entrySet()){
-                json.put(entry.getKey(),entry.getValue());
-            }
+            Table table = storeSchemas.getTableStruct("sample");
+            JSONObject json = getParam(request);
             logger.info(">>>>>json :{} ",json);
 
-            ByteBuffer buffer = parser.parse2ByteBuff(json,tableStruct);
-            logger.info(">>>>>buffer :{}",buffer);
-            logger.info(">>>>>>buffer content:{}",new String(buffer.array()));
+            Row row = parser.parse2Row(table,json);
+
+            txManager.insert(table,row);
 
 
-            boolean flag = arrayStore.append(buffer);
-
-            String helloWorld = "sql executed,ret:" + flag;
+            String helloWorld = "sql executed,ret:";
             BytesRestResponse restResponse = new BytesRestResponse(RestStatus.OK, "text/plain", helloWorld.getBytes());
             channel.sendResponse(restResponse);
         };
     }
+
 }

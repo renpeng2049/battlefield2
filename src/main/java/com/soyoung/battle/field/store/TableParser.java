@@ -6,18 +6,30 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TableStructParser {
+public class TableParser {
 
 
-    public ByteBuffer parse2ByteBuff(JSONObject json,TableStruct tableStruct){
+    public Row parse2Row(Table table,JSONObject json){
 
-        ByteBuffer byteBuffer = ByteBuffer.allocate(tableStruct.getRowSize());
-        List<Column> columnList = tableStruct.getColumnList();
+        List<Column> columnList = table.getColumnList();
+        for(Column column : columnList){
 
+            fillColumnValue(column,json);
+        }
 
-        List<Column> newColumnList = columnList.stream().map(o -> fillColumnValue(o,json)).collect(Collectors.toList());
+        Row row = new Row();
+        row.setColumnList(columnList);
+        row.setKey(json.getInteger("id"));
 
-        for(Column column : newColumnList){
+        return row;
+    }
+
+    public ByteBuffer getDataFromRow(Row row){
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(row.getRowSize());
+        List<Column> columnList = row.getColumnList();
+
+        for(Column column : columnList){
 
             putColumn2Buffer(byteBuffer,column);
         }
@@ -25,13 +37,12 @@ public class TableStructParser {
         return byteBuffer;
     }
 
-    public List<Column> getColumnFromBuffer(TableStruct tableStruct,ByteBuffer buffer){
 
-        List<Column> columnList = tableStruct.getColumnList();
+    public List<Column> getColumnsFromBuffer(List<Column> columnList, ByteBuffer buffer){
 
         for(Column column : columnList){
 
-            getColumn(buffer,column);
+            getColumnFromBuffer(buffer,column);
         }
 
         return columnList;
@@ -72,7 +83,7 @@ public class TableStructParser {
         }
     }
 
-    private Column getColumn(ByteBuffer buffer ,Column column){
+    private Column getColumnFromBuffer(ByteBuffer buffer ,Column column){
 
         Class clazz = column.getClazz();
         int length = column.getLength();
@@ -99,7 +110,7 @@ public class TableStructParser {
         return column;
     }
 
-    private Column fillColumnValue(Column column,JSONObject json){
+    public Column fillColumnValue(Column column,JSONObject json){
 
         String name = column.getName();
         Class clazz = column.getClazz();

@@ -21,7 +21,6 @@ import com.soyoung.battle.field.rest.RestHandler;
 import com.soyoung.battle.field.rest.action.BlankAction;
 import com.soyoung.battle.field.rest.action.SelectAction;
 import com.soyoung.battle.field.rest.action.SqlAction;
-import com.soyoung.battle.field.store.ArrayStore;
 import com.soyoung.battle.field.store.StoreSchemas;
 import com.soyoung.battle.field.transport.BoundTransportAddress;
 import com.soyoung.battle.field.usage.UsageService;
@@ -89,7 +88,6 @@ public class Node implements Closeable {
     private final Lifecycle lifecycle = new Lifecycle();
     private final Settings settings;
     private final Environment environment;
-    private final ArrayStore arrayStore;
     private final StoreSchemas storeSchemas;
 
     /**
@@ -141,13 +139,8 @@ public class Node implements Closeable {
             this.environment = environment;
             this.settings = environment.settings();
 
-
-            ArrayStore as = new ArrayStore(environment);
-            as.load();
-            this.arrayStore = as;
-
             StoreSchemas storeSchemas = new StoreSchemas();
-            storeSchemas.load();
+            storeSchemas.load(environment);
             this.storeSchemas = storeSchemas;
 
             //TODO ActionModule 初始化nettyTransport controller actions
@@ -199,13 +192,12 @@ public class Node implements Closeable {
     @Override
     public void close() throws IOException {
 
-        arrayStore.stop();
     }
 
     void initRestHandlers(Settings settings, RestController restController){
         new BlankAction(settings,restController);
-        new SqlAction(settings,restController,arrayStore,storeSchemas);
-        new SelectAction(settings,restController,arrayStore,storeSchemas);
+        new SqlAction(settings,restController,storeSchemas);
+        new SelectAction(settings,restController,storeSchemas);
     }
 
 

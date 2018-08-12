@@ -79,4 +79,11 @@ public class Column<T> {
             return -1;
         }
     }
+
+    @Override
+    public String toString() {
+        return "Column{" +
+                "name='" + name + '\'' +
+                '}';
+    }
 }
