@@ -1,6 +1,7 @@
 package com.soyoung.battle.field.rest.action;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.soyoung.battle.field.common.setting.Settings;
 import com.soyoung.battle.field.rest.*;
 import com.soyoung.battle.field.store.*;
@@ -35,6 +36,8 @@ public class SelectAction extends BaseRestHandler {
     protected RestChannelConsumer prepareRequest(RestRequest request) throws IOException {
         return channel -> {
 
+            List<JSONObject> jsonList = Lists.newArrayList();
+
             Table table = storeSchemas.getTableStruct("sample");
             JSONObject json = getParam(request);
 
@@ -43,10 +46,38 @@ public class SelectAction extends BaseRestHandler {
                 throw new IllegalStateException("id must not null");
             }
 
-            txManager.select(table, Integer.parseInt(key));
+
+            if("*".equals(key)){
+                //查询所有记录
+
+                List<Row> rowList = txManager.select(table);
 
 
-            String helloWorld = "sql executed" ;
+                for(Row row : rowList){
+                    JSONObject tmpJson = new JSONObject();
+                    List<Column> columnList = row.getColumnList();
+                    for(Column column : columnList){
+                        logger.info(">>>查询出的column:{}",column);
+                        tmpJson.put(column.getName(),column.getValue());
+                    }
+
+                    jsonList.add(tmpJson);
+                }
+
+            }else {
+
+                JSONObject retJson = new JSONObject();
+                Row row = txManager.selectById(table, Integer.parseInt(key));
+
+                for(Column column : row.getColumnList()){
+                    retJson.put(column.getName(),column.getValue());
+                }
+                logger.info("retJson:{}",retJson);
+                jsonList.add(retJson);
+            }
+
+
+            String helloWorld = jsonList.toString() ;
             BytesRestResponse restResponse = new BytesRestResponse(RestStatus.OK, "text/plain", helloWorld.getBytes());
             channel.sendResponse(restResponse);
         };

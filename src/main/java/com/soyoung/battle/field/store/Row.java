@@ -14,6 +14,10 @@ public class Row {
         columnList = Lists.newArrayList();
     }
 
+    public Row(List<Column> columnList){
+        this.columnList = columnList;
+    }
+
     public void addColumn(Column column){
 
         columnList.add(column);

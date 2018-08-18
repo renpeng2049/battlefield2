@@ -1,6 +1,7 @@
 package com.soyoung.battle.field.store;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -40,12 +41,30 @@ public class TableParser {
 
     public List<Column> getColumnsFromBuffer(List<Column> columnList, ByteBuffer buffer){
 
+        List<Column> newColumnList = Lists.newArrayList();
         for(Column column : columnList){
 
-            getColumnFromBuffer(buffer,column);
+            Column newColumn = getColumnFromBuffer(buffer,column);
+            newColumnList.add(newColumn);
         }
 
-        return columnList;
+        return newColumnList;
+    }
+
+    public Row getRowFromBuffer(List<Column> columnList, ByteBuffer buffer){
+
+        Row row = new Row();
+        row.setKey(buffer.getInt());
+
+        List<Column> newColumnList = Lists.newArrayList();
+        for(Column column : columnList){
+
+            Column newColumn = getColumnFromBuffer(buffer,column);
+            newColumnList.add(newColumn);
+        }
+
+        row.setColumnList(newColumnList);
+        return row;
     }
 
     private void putColumn2Buffer(ByteBuffer buffer ,Column column){
@@ -85,29 +104,32 @@ public class TableParser {
 
     private Column getColumnFromBuffer(ByteBuffer buffer ,Column column){
 
+
         Class clazz = column.getClazz();
         int length = column.getLength();
 
+        Column newColumn = new Column(column.getName(),clazz,length,column.getOffset());
+
         if(clazz.equals(byte.class)){
-            column.setValue(buffer.get());
+            newColumn.setValue(buffer.get());
         } else if(clazz.equals(char.class)){
-            column.setValue(buffer.getChar());
+            newColumn.setValue(buffer.getChar());
         } else if(clazz.equals(Integer.class)){
-            column.setValue(buffer.getInt());
+            newColumn.setValue(buffer.getInt());
         } else if(clazz.equals(Long.class)){
-            column.setValue(buffer.getLong());
+            newColumn.setValue(buffer.getLong());
         } else if(clazz.equals(Float.class)){
-            column.setValue(buffer.getFloat());
+            newColumn.setValue(buffer.getFloat());
         } else if(clazz.equals(Double.class)){
-            column.setValue(buffer.getDouble());
+            newColumn.setValue(buffer.getDouble());
         } else if(clazz.equals(String.class)){
             byte[] valueBytes = new byte[length];
             buffer.get(valueBytes,0,valueBytes.length);
-            column.setValue(new String(valueBytes));
+            newColumn.setValue(new String(valueBytes));
         } else {
 
         }
-        return column;
+        return newColumn;
     }
 
     public Column fillColumnValue(Column column,JSONObject json){

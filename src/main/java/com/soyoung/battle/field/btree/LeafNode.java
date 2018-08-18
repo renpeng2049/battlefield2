@@ -2,6 +2,7 @@ package com.soyoung.battle.field.btree;
 
 import com.soyoung.battle.field.store.Cursor;
 import com.soyoung.battle.field.store.Page;
+import com.soyoung.battle.field.store.Table;
 
 import java.nio.ByteBuffer;
 
@@ -12,9 +13,6 @@ public class LeafNode extends TreeNode {
     //cellNum字段占用的字节数
     private static final Integer CELL_NUM_SIZE = 4;
     public static final Integer LEAF_NODE_HEADER_SIZE = COMMON_HEADER_SIZE + CELL_NUM_SIZE;
-
-    //节点包含的数据条数
-    private Integer cellNum;
 
     public LeafNode(Page page){
         super(page);
@@ -35,11 +33,10 @@ public class LeafNode extends TreeNode {
     //根据cursor查询数据id
     public Integer getCellKey(Cursor cursor){
         Integer searchPosition = LEAF_NODE_HEADER_SIZE + cursor.getCellNo() * (cursor.getTable().getRowSize() + CELL_KEY_SIZE); // 数据kv形式存储，key占4字节
-        Integer bufferPosition = page.getPageBuffer().position();
-        if(searchPosition >= bufferPosition){
+        if(searchPosition >= getEndPostion(cursor.getTable())){
             return null;
         } else {
-            return page.getPageBuffer().getInt();
+            return page.getPageBuffer().getInt(searchPosition);
         }
     }
 
@@ -48,38 +45,50 @@ public class LeafNode extends TreeNode {
         return page.getPageBuffer().getInt(LEAF_NODE_HEADER_SIZE + position);
     }
 
-    public void getData(byte[] dst, Integer position,int length){
-        page.getPageBuffer().mark();
-        page.getPageBuffer().position(position);
-        page.getPageBuffer().get(dst,0,length);
-        page.getPageBuffer().reset();
+    public void makeSpace(Cursor cursor){
+
+        Integer behindDataLen = (getCellNum() - cursor.getCellNo())*(CELL_KEY_SIZE + cursor.getTable().getRowSize());
+
+        byte[] dst = new byte[behindDataLen];
+        Integer relativePostion = LeafNode.LEAF_NODE_HEADER_SIZE + cursor.getCellNo() * (CELL_KEY_SIZE + cursor.getTable().getRowSize());
+        page.getPageBuffer().position(relativePostion);
+        //获取游标后面的数据
+        page.getPageBuffer().get(dst,0,behindDataLen);
+
+        //put数据到后一位空间
+        page.getPageBuffer().position(relativePostion + (CELL_KEY_SIZE + cursor.getTable().getRowSize()));
+        page.getPageBuffer().put(dst,0,behindDataLen);
     }
 
-    public void putData(byte[] src,Integer position,int length){
-        page.getPageBuffer().position(position);
-        page.getPageBuffer().put(src,0,length);
-    }
 
     public void putKeyAndValue(Cursor cursor,Integer key,ByteBuffer value){
 
-        value.flip(); //翻转buffer
-//        Integer position = LEAF_NODE_HEADER_SIZE + cursor.getCellNo() * (cursor.getTable().getRowSize() + CELL_KEY_SIZE);
-//        page.getPageBuffer().mark();
-//        page.getPageBuffer().position(position);
-//        page.getPageBuffer().putInt(key);
-//        page.getPageBuffer().put(value);
-//        page.getPageBuffer().reset();
+        Integer cellNum = page.getPageBuffer().getInt(COMMON_HEADER_SIZE);
+        page.getPageBuffer().position(COMMON_HEADER_SIZE);
+        page.getPageBuffer().putInt(cellNum+1);
+
+        Integer relativePostion = LeafNode.LEAF_NODE_HEADER_SIZE + cursor.getCellNo() * (CELL_KEY_SIZE + cursor.getTable().getRowSize());
+        page.getPageBuffer().position(relativePostion);
 
         page.getPageBuffer().putInt(key);
+        value.flip(); //翻转buffer
         page.getPageBuffer().put(value);
+
+        page.getPageBuffer().position(getEndPostion(cursor.getTable()));
     }
 
-    public Integer getBufferPostion(){
+    public void resetPage(Table table){
 
-        return page.getPageBuffer().position();
+        page.getPageBuffer().limit(Page.PAGE_SIZE);
+        page.getPageBuffer().position(getEndPostion(table));
     }
 
-    public void setBufferPostion(Integer postion){
+    public Integer getEndPostion(Table table){
+
+        return LEAF_NODE_HEADER_SIZE + getCellNum() * (CELL_KEY_SIZE + table.getRowSize());
+    }
+
+    public void setEndPostion(Integer postion){
         page.getPageBuffer().position(postion);
     }
 

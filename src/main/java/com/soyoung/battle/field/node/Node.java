@@ -21,6 +21,7 @@ import com.soyoung.battle.field.rest.RestHandler;
 import com.soyoung.battle.field.rest.action.BlankAction;
 import com.soyoung.battle.field.rest.action.SelectAction;
 import com.soyoung.battle.field.rest.action.SqlAction;
+import com.soyoung.battle.field.rest.action.StateAction;
 import com.soyoung.battle.field.store.StoreSchemas;
 import com.soyoung.battle.field.transport.BoundTransportAddress;
 import com.soyoung.battle.field.usage.UsageService;
@@ -198,6 +199,7 @@ public class Node implements Closeable {
         new BlankAction(settings,restController);
         new SqlAction(settings,restController,storeSchemas);
         new SelectAction(settings,restController,storeSchemas);
+        new StateAction(settings,restController,storeSchemas);
     }
 
 

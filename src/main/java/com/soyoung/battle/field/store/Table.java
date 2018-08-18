@@ -64,6 +64,7 @@ public class Table {
     public String toString() {
         return "Table{" +
                 "tableName='" + tableName + '\'' +
+                ", rowSize=" + rowSize +
                 '}';
     }
 }

@@ -83,7 +83,11 @@ public class Column<T> {
     @Override
     public String toString() {
         return "Column{" +
-                "name='" + name + '\'' +
+                "offset=" + offset +
+                ", name='" + name + '\'' +
+                ", clazz=" + clazz +
+                ", length=" + length +
+                ", value=" + value +
                 '}';
     }
 }

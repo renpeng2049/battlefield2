@@ -58,7 +58,7 @@ public class StoreSchemas {
 
             buffer.flip();
             firstPage.getPageBuffer().put(buffer);
-            pager.savePage(firstPage);
+            //pager.savePage(firstPage);
         }
 
         logger.info("first page buffer:{}",firstPage.getPageBuffer());
@@ -71,6 +71,11 @@ public class StoreSchemas {
         }
 
         TreeNode rootNode = new LeafNode(firstPage);
+
+        //获取node 数据条数，设置postion 到数据的最后
+        Integer cellNum = ((LeafNode) rootNode).getCellNum();
+        ((LeafNode) rootNode).setEndPostion(LeafNode.LEAF_NODE_HEADER_SIZE + cellNum * (row.getRowSize() + LeafNode.CELL_KEY_SIZE));
+        logger.info("load 文件完成 ，rootPage:{}",rootNode.getPage());
 
         Table table = new Table("sample",row,rootNode,pager);
 

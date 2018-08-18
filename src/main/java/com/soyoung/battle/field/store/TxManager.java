@@ -1,5 +1,7 @@
 package com.soyoung.battle.field.store;
 
+import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.soyoung.battle.field.btree.LeafNode;
 import com.soyoung.battle.field.btree.TreeNode;
 import com.soyoung.battle.field.common.logging.Loggers;
@@ -54,14 +56,8 @@ public class TxManager {
 
             if(cursor.getCellNo() < cellNum){
                 //移动cellNo之后的数据
-                Integer behindDataLen = (cellNum - cursor.getCellNo())*getKVSize(table);
-                byte[] behindData = new byte[behindDataLen];
-                Integer indexPostion = LeafNode.LEAF_NODE_HEADER_SIZE + cursor.getCellNo()*getKVSize(table);
-
-                leafNode.getData(behindData,indexPostion,behindDataLen);
-
-                Integer newPosition = indexPostion + getKVSize(table);
-                leafNode.putData(behindData,newPosition,behindDataLen);
+                leafNode.makeSpace(cursor);
+                logger.info("移动数据后，buffer:{}",leafNode.getPage());
             }
         }
 
@@ -72,19 +68,11 @@ public class TxManager {
 
         logger.info("pageBuffer:{}",leafNode.getPage());
 
-        Integer position = leafNode.getBufferPostion();
-        //更新cellNum
-        leafNode.incrCellNum();
-        //复位 position
-        leafNode.setBufferPostion(position);
-
-        //保存并写入文件
+        //存储到磁盘
         table.getPager().savePage(leafNode.getPage());
 
-        //TODO 写入后position limit都已改变，需复位. 改为满了再写入？
-
-        leafNode.setBufferPostion(position);
-        leafNode.setBufferLimit(Page.PAGE_SIZE);
+        //复位page数据
+        leafNode.resetPage(table);
     }
 
     private Cursor binarySearch(Table table, Integer key, LeafNode leafNode, Integer cellNum) {
@@ -115,7 +103,7 @@ public class TxManager {
         return cursor;
     }
 
-    public List<Column> select(Table table, Integer key){
+    public Row selectById(Table table, Integer key){
 
         if(null == key){
             throw new IllegalStateException("id must not null");
@@ -137,18 +125,51 @@ public class TxManager {
         }
 
         Page page = leafNode.getPage();
-        ByteBuffer pageBuffer = page.getPageBuffer();
+        ByteBuffer pageBuffer = page.getPageBuffer().duplicate();
 
-        pageBuffer.mark();
-        pageBuffer.position(cursor.getCellNo() * getKVSize(table));
+        pageBuffer.position(LeafNode.LEAF_NODE_HEADER_SIZE + cursor.getCellNo() * getKVSize(table));
+        Row row = parser.getRowFromBuffer(table.getColumnList(),pageBuffer);
 
-        List<Column> columnList = table.getColumnList();
-        parser.getColumnsFromBuffer(columnList,pageBuffer);
+        return row;
+    }
 
-        //恢复position
-        pageBuffer.reset();
+    public List<Row> select(Table table){
 
-        return columnList;
+        //TODO 暂定根节点
+        TreeNode rootNode = table.getRootNode();
+        LeafNode leafNode = ((LeafNode)rootNode);
+        Integer cellNum = leafNode.getCellNum();
+
+        Page page = leafNode.getPage();
+        ByteBuffer pageBuffer = page.getPageBuffer().duplicate();
+
+        pageBuffer.position(LeafNode.LEAF_NODE_HEADER_SIZE);
+
+        List<Row> rowList = Lists.newArrayList();
+
+        for(int i = 0;i < cellNum; i++){
+            logger.info(">>>>>cl:{}",table.getColumnList());
+            logger.info(">>>>>pageBuffer:{}",pageBuffer);
+            Row tmpRow = parser.getRowFromBuffer(table.getColumnList(),pageBuffer);
+
+            rowList.add(tmpRow);
+        }
+
+        return rowList;
+    }
+
+    public JSONObject state(Table table){
+
+
+        TreeNode rootNode = table.getRootNode();
+        LeafNode leafNode = ((LeafNode)rootNode);
+        Integer cellNum = leafNode.getCellNum();
+
+        JSONObject json = new JSONObject();
+        json.put("table",table.getTableName());
+        json.put("cellNum",cellNum);
+
+        return json;
     }
 
     private Integer getKVSize(Table table){
