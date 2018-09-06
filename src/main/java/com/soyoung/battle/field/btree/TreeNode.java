@@ -12,36 +12,29 @@ public abstract class TreeNode {
      */
     public static final Integer COMMON_HEADER_SIZE = 1 + 1 + 4;
     protected NodeTypeEnum nodeTypeEnum;
+    //是否根节点，0否1是
     protected boolean isRoot;
-    protected TreeNode parent;
+    //父节点
+    protected Integer parent;
     protected Page page;
 
-    public TreeNode(Page page){
+    public TreeNode(Page page,NodeTypeEnum nodeTypeEnum,boolean isRoot,Integer parent){
         this.page = page;
+        this.nodeTypeEnum = nodeTypeEnum;
+        this.isRoot = isRoot; //是否根节点，0否1是
+        this.parent = parent;
     }
 
     public NodeTypeEnum getNodeTypeEnum() {
         return nodeTypeEnum;
     }
 
-    public void setNodeTypeEnum(NodeTypeEnum nodeTypeEnum) {
-        this.nodeTypeEnum = nodeTypeEnum;
-    }
-
     public boolean isRoot() {
         return isRoot;
     }
 
-    public void setRoot(boolean root) {
-        isRoot = root;
-    }
-
-    public TreeNode getParent() {
+    public Integer getParent() {
         return parent;
-    }
-
-    public void setParent(TreeNode parent) {
-        this.parent = parent;
     }
 
     public Page getPage() {

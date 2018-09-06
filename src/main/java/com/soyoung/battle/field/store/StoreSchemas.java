@@ -46,34 +46,27 @@ public class StoreSchemas {
 
         Pager pager = new Pager(store);
         Page firstPage = pager.getPage(0);
+        byte nodeType = -1;
         if(null == firstPage){
             //construct root node
-            firstPage = Page.EMPTY();
-
-            ByteBuffer buffer = ByteBuffer.allocate(LeafNode.LEAF_NODE_HEADER_SIZE);
-            buffer.put((byte)NodeTypeEnum.NODE_LEAF.getIndex());
-            buffer.put((byte)1); //是否根节点,0否1是
-            buffer.putInt(-1); //父节点页码 root无父节点，设为-1
-            buffer.putInt(0);
-
-            buffer.flip();
-            firstPage.getPageBuffer().put(buffer);
-            //pager.savePage(firstPage);
+            firstPage = Page.EMPTY(0);
+            //根节点最开始也是叶子节点
+            nodeType = 1;
+        } else {
+            nodeType = firstPage.getPageBuffer().get(0); //获取节点类型，position=0
         }
 
-        logger.info("first page buffer:{}",firstPage.getPageBuffer());
-
-        byte nodeType = firstPage.getPageBuffer().get(0); //TODO 获取节点类型，position=6 故需指定position获取
-        logger.info(">>>>node type:{}",nodeType);
         //TODO 如果是非叶子节点，另行处理
         if(nodeType == NodeTypeEnum.NODE_INTERNAL.getIndex()){
             throw new IllegalStateException("暂未实现非叶子节点逻辑");
         }
 
-        TreeNode rootNode = new LeafNode(firstPage);
 
-        //获取node 数据条数，设置postion 到数据的最后
-        Integer cellNum = ((LeafNode) rootNode).getCellNum();
+        //获取node 数据条数
+        Integer cellNum = firstPage.getPageBuffer().getInt(TreeNode.COMMON_HEADER_SIZE);
+
+        //TODO 暂按叶子节点处理
+        TreeNode rootNode = new LeafNode(firstPage,true,-1,cellNum);
         ((LeafNode) rootNode).setEndPostion(LeafNode.LEAF_NODE_HEADER_SIZE + cellNum * (row.getRowSize() + LeafNode.CELL_KEY_SIZE));
         logger.info("load 文件完成 ，rootPage:{}",rootNode.getPage());
 

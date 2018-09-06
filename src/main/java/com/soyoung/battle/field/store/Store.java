@@ -123,6 +123,16 @@ public class Store {
         return flag;
     }
 
+    public long getFileSize(){
+
+        try {
+            return readFileChannel.size();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalStateException("获取文件长度失败");
+        }
+    }
+
     public boolean read(ByteBuffer byteBuffer,Integer position){
 
         boolean flag = false;

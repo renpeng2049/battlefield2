@@ -5,14 +5,16 @@ import java.nio.ByteBuffer;
 public class Pager {
 
     private Store store;
+    private Long pageNums;
 
     public Pager(Store store){
         this.store = store;
+        long fileSize = store.getFileSize();
+        this.pageNums = fileSize/Page.PAGE_SIZE;
     }
 
-    public void appendPage(Page page){
-
-        store.append(page.getPageBuffer());
+    public Long getPageNums() {
+        return pageNums;
     }
 
     /**
@@ -44,4 +46,5 @@ public class Pager {
         long position = Page.PAGE_SIZE * page.getPageNo();
         store.wirte(page.getPageBuffer(),position);
     }
+
 }

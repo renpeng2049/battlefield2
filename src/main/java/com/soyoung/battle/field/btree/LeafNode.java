@@ -14,8 +14,22 @@ public class LeafNode extends TreeNode {
     private static final Integer CELL_NUM_SIZE = 4;
     public static final Integer LEAF_NODE_HEADER_SIZE = COMMON_HEADER_SIZE + CELL_NUM_SIZE;
 
-    public LeafNode(Page page){
-        super(page);
+    private Integer cellNum;
+
+
+    public LeafNode(Page page,boolean isRoot,Integer parent,Integer cellNum){
+        super(page,NodeTypeEnum.NODE_LEAF,isRoot,parent);
+
+        ByteBuffer buffer = ByteBuffer.allocate(LEAF_NODE_HEADER_SIZE);
+        buffer.put((byte)NodeTypeEnum.NODE_LEAF.getIndex());
+        buffer.put(isRoot ? (byte)1 : (byte)0); //是否根节点,0否1是
+        buffer.putInt(parent); //父节点页码 root无父节点，设为-1
+        buffer.putInt(cellNum); //cellNum
+
+        buffer.flip();
+        page.getPageBuffer().put(buffer);
+
+        this.cellNum = cellNum;
     }
 
     //从文件中获取数据条数
@@ -75,6 +89,17 @@ public class LeafNode extends TreeNode {
         page.getPageBuffer().put(value);
 
         page.getPageBuffer().position(getEndPostion(cursor.getTable()));
+    }
+
+    public byte[] getData(Integer len,Integer position){
+        byte[] dst = new byte[len];
+        page.getPageBuffer().position(position);
+        page.getPageBuffer().get(dst);
+        return dst;
+    }
+
+    public void putData(byte[] src){
+        page.getPageBuffer().put(src);
     }
 
     public void resetPage(Table table){

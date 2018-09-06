@@ -35,10 +35,10 @@ public class Page {
         this.pageBuffer.put(buffer);
     }
 
-    public static Page EMPTY(){
+    public static Page EMPTY(Integer pageNo){
 
         Page page = new Page();
-        page.setPageNo(0);
+        page.setPageNo(pageNo);
         ByteBuffer buffer = ByteBuffer.allocate(PAGE_SIZE);
 
         page.setPageBuffer(buffer);
